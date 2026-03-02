@@ -1,19 +1,6 @@
-local SlotGame = Unity.MonoBehaviour:New()
+local SlotView = Unity.Component:Extend("SlotView")
 
-SlotGame.Symbols = {
-  "CHERRY",
-  "LEMON",
-  "BELL",
-  "STAR",
-  "SEVEN",
-  "CLOVER",
-}
-
-function SlotGame:Start()
-  self.credits = 100
-  self.bet = 10
-  self.lastUiSyncTime = 0
-
+function SlotView:Awake()
   self.reels = {
     Unity.UI.FindById("reel-1"),
     Unity.UI.FindById("reel-2"),
@@ -28,42 +15,96 @@ function SlotGame:Start()
   Unity.Debug.Assert(self.statusLabel, "status-label is required")
   Unity.Debug.Assert(self.creditsLabel, "credits-label is required")
   Unity.Debug.Assert(self.betInput, "bet-input is required")
+end
 
-  Unity.UI.BindClick(self.spinButton, function()
+function SlotView:SetReels(currentReels)
+  for index = 1, 3 do
+    Unity.UI.SetText(self.reels[index], currentReels[index])
+  end
+end
+
+function SlotView:SetCredits(value)
+  Unity.UI.SetText(self.creditsLabel, value)
+end
+
+function SlotView:SetBet(value)
+  Unity.UI.SetValue(self.betInput, value)
+end
+
+function SlotView:GetBet()
+  return Unity.UI.GetValue(self.betInput)
+end
+
+function SlotView:SetStatus(text)
+  Unity.UI.SetText(self.statusLabel, text)
+end
+
+function SlotView:BindSpin(callback)
+  Unity.UI.BindClick(self.spinButton, callback)
+end
+
+function SlotView:BindBetChanged(callback)
+  Unity.UI.BindChange(self.betInput, function()
+    callback(self:GetBet())
+  end)
+end
+
+local SlotGameController = Unity.MonoBehaviour:Extend("SlotGameController")
+
+SlotGameController.Symbols = {
+  "CHERRY",
+  "LEMON",
+  "BELL",
+  "STAR",
+  "SEVEN",
+  "CLOVER",
+}
+
+function SlotGameController:Awake()
+  self.credits = 100
+  self.bet = 10
+  self.lastUiSyncTime = 0
+end
+
+function SlotGameController:Start()
+  self.view = self:GetComponent(SlotView)
+  Unity.Debug.Assert(self.view, "SlotView component is required on SlotGame GameObject")
+
+  self.view:BindSpin(function()
     self:Spin()
   end)
-  Unity.UI.BindChange(self.betInput, function()
-    self.bet = self:ParseBet(Unity.UI.GetValue(self.betInput))
+  self.view:BindBetChanged(function(rawValue)
+    self.bet = self:ParseBet(rawValue)
     self:RefreshHud()
   end)
 
   self:RefreshHud()
-  Unity.Debug.Log("SlotGame started")
+  Unity.Debug.Log("SlotGameController started")
 end
 
-function SlotGame:Update()
+function SlotGameController:Update()
   if Unity.Time.time - self.lastUiSyncTime > 1 then
     self.lastUiSyncTime = Unity.Time.time
     self:RefreshHud()
   end
 end
 
-function SlotGame:RefreshHud()
-  Unity.UI.SetText(self.creditsLabel, self.credits)
-  Unity.UI.SetValue(self.betInput, self.bet)
+function SlotGameController:RefreshHud()
+  self.view:SetCredits(self.credits)
+  self.view:SetBet(self.bet)
 end
 
-function SlotGame:RandomSymbol()
+function SlotGameController:RandomSymbol()
   local symbolIndex = Unity.Random.Range(1, #self.Symbols + 1)
   return self.Symbols[symbolIndex]
 end
 
-function SlotGame:ParseBet(rawValue)
+function SlotGameController:ParseBet(rawValue)
   local parsedValue = tonumber(rawValue) or self.bet
   return Unity.Mathf.Clamp(Unity.Mathf.FloorToInt(parsedValue), 1, 50)
 end
 
-function SlotGame:CalculatePayout(reels, currentBet)
+function SlotGameController:CalculatePayout(reels, currentBet)
   if reels[1] == reels[2] and reels[2] == reels[3] then
     if reels[1] == "SEVEN" then
       return currentBet * 12, "JACKPOT! Triple SEVEN!"
@@ -79,16 +120,16 @@ function SlotGame:CalculatePayout(reels, currentBet)
   return 0, "No match. Try again."
 end
 
-function SlotGame:Spin()
+function SlotGameController:Spin()
   if self.credits <= 0 then
-    Unity.UI.SetText(self.statusLabel, "No credits left. Refresh to restart.")
+    self.view:SetStatus("No credits left. Refresh to restart.")
     Unity.Debug.LogWarning("Spin blocked because credits are 0")
     return
   end
 
-  self.bet = self:ParseBet(Unity.UI.GetValue(self.betInput))
+  self.bet = self:ParseBet(self.view:GetBet())
   if self.bet > self.credits then
-    Unity.UI.SetText(self.statusLabel, "Bet exceeds credits.")
+    self.view:SetStatus("Bet exceeds credits.")
     self:RefreshHud()
     return
   end
@@ -100,21 +141,24 @@ function SlotGame:Spin()
     self:RandomSymbol(),
     self:RandomSymbol(),
   }
-  for index = 1, 3 do
-    Unity.UI.SetText(self.reels[index], currentReels[index])
-  end
+  self.view:SetReels(currentReels)
 
   local payout, message = self:CalculatePayout(currentReels, self.bet)
   self.credits = self.credits + payout
 
   if payout > 0 then
-    Unity.UI.SetText(self.statusLabel, string.format("%s Won %d credits.", message, payout))
+    self.view:SetStatus(string.format("%s Won %d credits.", message, payout))
     Unity.Debug.Log(string.format("Spin win: +%d", payout))
   else
-    Unity.UI.SetText(self.statusLabel, message)
+    self.view:SetStatus(message)
   end
 
   self:RefreshHud()
 end
 
-Unity.Application.Run(SlotGame)
+local slotScene = Unity.Scene.New("SlotScene")
+local slotGameObject = slotScene:CreateGameObject("SlotGame")
+slotGameObject:AddComponent(SlotView)
+slotGameObject:AddComponent(SlotGameController)
+
+Unity.Application.RunScene(slotScene)

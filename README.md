@@ -32,7 +32,11 @@ This command generates:
 - `Unity.Random.Range`
 - `Unity.Mathf.Clamp / FloorToInt`
 - `Unity.Time.deltaTime / time`
-- `Unity.MonoBehaviour:New()` and `Unity.Application.Run(...)`
+- `Unity.Component` / `Unity.MonoBehaviour`
+- `Unity.GameObject:AddComponent(...)`
+- `Unity.GameObject:GetComponent(...)`
+- `Unity.Scene.New(...)` and `scene:CreateGameObject(...)`
+- `Unity.Application.RunScene(...)`
 
 ## Preview locally
 
