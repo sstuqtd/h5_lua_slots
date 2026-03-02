@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - cursor/lua-h5-generation-*
     paths:
       - "demo_h5/**"
       - ".github/workflows/deploy-pages.yml"
