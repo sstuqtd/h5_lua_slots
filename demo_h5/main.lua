@@ -1,8 +1,6 @@
-local js = require("js")
-local document = js.global.document
-local mathFloor = math.floor
+local SlotGame = Unity.MonoBehaviour:New()
 
-local symbols = {
+SlotGame.Symbols = {
   "CHERRY",
   "LEMON",
   "BELL",
@@ -11,30 +9,61 @@ local symbols = {
   "CLOVER",
 }
 
-local credits = 100
-local bet = 10
+function SlotGame:Start()
+  self.credits = 100
+  self.bet = 10
+  self.lastUiSyncTime = 0
 
-local reelElements = {
-  document:getElementById("reel-1"),
-  document:getElementById("reel-2"),
-  document:getElementById("reel-3"),
-}
+  self.reels = {
+    Unity.UI.FindById("reel-1"),
+    Unity.UI.FindById("reel-2"),
+    Unity.UI.FindById("reel-3"),
+  }
+  self.spinButton = Unity.UI.FindById("spin-button")
+  self.statusLabel = Unity.UI.FindById("status-label")
+  self.creditsLabel = Unity.UI.FindById("credits-label")
+  self.betInput = Unity.UI.FindById("bet-input")
 
-local spinButton = document:getElementById("spin-button")
-local statusLabel = document:getElementById("status-label")
-local creditsLabel = document:getElementById("credits-label")
-local betInput = document:getElementById("bet-input")
+  Unity.Debug.Assert(self.spinButton, "spin-button is required")
+  Unity.Debug.Assert(self.statusLabel, "status-label is required")
+  Unity.Debug.Assert(self.creditsLabel, "credits-label is required")
+  Unity.Debug.Assert(self.betInput, "bet-input is required")
 
-local function updateHud()
-  creditsLabel.textContent = tostring(credits)
-  betInput.value = tostring(bet)
+  Unity.UI.BindClick(self.spinButton, function()
+    self:Spin()
+  end)
+  Unity.UI.BindChange(self.betInput, function()
+    self.bet = self:ParseBet(Unity.UI.GetValue(self.betInput))
+    self:RefreshHud()
+  end)
+
+  self:RefreshHud()
+  Unity.Debug.Log("SlotGame started")
 end
 
-local function randomSymbol()
-  return symbols[math.random(1, #symbols)]
+function SlotGame:Update()
+  if Unity.Time.time - self.lastUiSyncTime > 1 then
+    self.lastUiSyncTime = Unity.Time.time
+    self:RefreshHud()
+  end
 end
 
-local function calculatePayout(reels, currentBet)
+function SlotGame:RefreshHud()
+  Unity.UI.SetText(self.creditsLabel, self.credits)
+  Unity.UI.SetValue(self.betInput, self.bet)
+end
+
+function SlotGame:RandomSymbol()
+  local symbolIndex = Unity.Random.Range(1, #self.Symbols + 1)
+  return self.Symbols[symbolIndex]
+end
+
+function SlotGame:ParseBet(rawValue)
+  local parsedValue = tonumber(rawValue) or self.bet
+  return Unity.Mathf.Clamp(Unity.Mathf.FloorToInt(parsedValue), 1, 50)
+end
+
+function SlotGame:CalculatePayout(reels, currentBet)
   if reels[1] == reels[2] and reels[2] == reels[3] then
     if reels[1] == "SEVEN" then
       return currentBet * 12, "JACKPOT! Triple SEVEN!"
@@ -50,63 +79,42 @@ local function calculatePayout(reels, currentBet)
   return 0, "No match. Try again."
 end
 
-local function clamp(value, minValue, maxValue)
-  if value < minValue then
-    return minValue
-  end
-
-  if value > maxValue then
-    return maxValue
-  end
-
-  return value
-end
-
-local function parseBetInput(rawValue)
-  local numericValue = tonumber(rawValue) or bet
-  return clamp(mathFloor(numericValue), 1, 50)
-end
-
-local function spin()
-  if credits <= 0 then
-    statusLabel.textContent = "No credits left. Refresh to restart."
+function SlotGame:Spin()
+  if self.credits <= 0 then
+    Unity.UI.SetText(self.statusLabel, "No credits left. Refresh to restart.")
+    Unity.Debug.LogWarning("Spin blocked because credits are 0")
     return
   end
 
-  bet = parseBetInput(betInput.value)
-
-  if bet > credits then
-    statusLabel.textContent = "Bet exceeds credits."
-    updateHud()
+  self.bet = self:ParseBet(Unity.UI.GetValue(self.betInput))
+  if self.bet > self.credits then
+    Unity.UI.SetText(self.statusLabel, "Bet exceeds credits.")
+    self:RefreshHud()
     return
   end
 
-  credits = credits - bet
+  self.credits = self.credits - self.bet
 
-  local reels = { randomSymbol(), randomSymbol(), randomSymbol() }
+  local currentReels = {
+    self:RandomSymbol(),
+    self:RandomSymbol(),
+    self:RandomSymbol(),
+  }
   for index = 1, 3 do
-    reelElements[index].textContent = reels[index]
+    Unity.UI.SetText(self.reels[index], currentReels[index])
   end
 
-  local payout, message = calculatePayout(reels, bet)
-  credits = credits + payout
+  local payout, message = self:CalculatePayout(currentReels, self.bet)
+  self.credits = self.credits + payout
 
   if payout > 0 then
-    statusLabel.textContent = string.format("%s Won %d credits.", message, payout)
+    Unity.UI.SetText(self.statusLabel, string.format("%s Won %d credits.", message, payout))
+    Unity.Debug.Log(string.format("Spin win: +%d", payout))
   else
-    statusLabel.textContent = message
+    Unity.UI.SetText(self.statusLabel, message)
   end
 
-  updateHud()
+  self:RefreshHud()
 end
 
-local now = js.global.Date.now()
-math.randomseed(mathFloor(now % 2147483647))
-
-spinButton.onclick = spin
-betInput.onchange = function()
-  bet = parseBetInput(betInput.value)
-  updateHud()
-end
-
-updateHud()
+Unity.Application.Run(SlotGame)

@@ -22,8 +22,17 @@ lua create_h5.lua demo_h5 "My Lua H5 Game"
 This command generates:
 
 - `index.html`
+- `unity_api.lua` (Unity-style helper API for Lua)
 - `main.lua`
 - `styles.css`
+
+`unity_api.lua` exposes Unity-like helpers:
+
+- `Unity.Debug.Log / LogWarning / LogError / Assert`
+- `Unity.Random.Range`
+- `Unity.Mathf.Clamp / FloorToInt`
+- `Unity.Time.deltaTime / time`
+- `Unity.MonoBehaviour:New()` and `Unity.Application.Run(...)`
 
 ## Preview locally
 
