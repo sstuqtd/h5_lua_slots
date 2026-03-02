@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Lua H5 Game</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="container">
+    <h1>My Lua H5 Game</h1>
+    <p class="subtitle">A browser-based slot mini game powered by Lua.</p>
+
+    <section class="hud">
+      <div><span class="label">Credits:</span> <span id="credits-label">100</span></div>
+      <div><span class="label">Bet:</span> <input id="bet-input" type="number" min="1" max="50" value="10" /></div>
+    </section>
+
+    <section class="reels" aria-label="slot reels">
+      <div id="reel-1" class="reel">CHERRY</div>
+      <div id="reel-2" class="reel">LEMON</div>
+      <div id="reel-3" class="reel">BELL</div>
+    </section>
+
+    <button id="spin-button" type="button">SPIN</button>
+    <p id="status-label" class="status">Press SPIN to start.</p>
+  </main>
+
+  <script src="https://unpkg.com/fengari-web/dist/fengari-web.js"></script>
+  <script type="application/lua" src="unity_api.lua"></script>
+  <script type="application/lua" src="main.lua"></script>
+</body>
+</html>

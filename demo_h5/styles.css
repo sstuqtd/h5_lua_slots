@@ -1,0 +1,88 @@
+* {
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at top, #2f3b52, #121721);
+  color: #f4f7ff;
+}
+
+.container {
+  width: min(560px, 92vw);
+  padding: 28px;
+  border-radius: 16px;
+  background-color: rgba(13, 18, 28, 0.88);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+  text-align: center;
+}
+
+h1 {
+  margin: 0 0 8px;
+}
+
+.subtitle {
+  margin: 0 0 20px;
+  color: #b6c3dd;
+}
+
+.hud {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.label {
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+#bet-input {
+  width: 76px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid #455171;
+  background: #101625;
+  color: #ffffff;
+}
+
+.reels {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.reel {
+  padding: 20px 12px;
+  border-radius: 10px;
+  background: #1f2940;
+  border: 1px solid #314062;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+#spin-button {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 22px;
+  background: #00a3ff;
+  color: #0d1320;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+#spin-button:hover {
+  background: #3db6ff;
+}
+
+.status {
+  min-height: 24px;
+  margin-top: 16px;
+  color: #d8e4ff;
+}
