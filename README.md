@@ -44,6 +44,18 @@ Deployment behavior:
 - Auto deploy on push to `main` when `demo_h5/**` changes
 - Manual deploy with GitHub Actions `workflow_dispatch`
 
+First-time setup (required if Pages is disabled):
+
+1. Open GitHub repository **Settings → Pages**
+2. In **Build and deployment**, choose **Source: GitHub Actions**
+3. Re-run the workflow from **Actions** tab
+
+Optional auto-enable setup:
+
+- Create repository secret `PAGES_DEPLOY_TOKEN`
+- Use a token with Pages write/admin capability
+- Then workflow can try enabling Pages automatically
+
 After deployment completes, the site URL follows:
 
 ```text
