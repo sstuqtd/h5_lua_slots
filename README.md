@@ -32,3 +32,20 @@ python3 -m http.server 8080 --directory demo_h5
 ```
 
 Then open `http://localhost:8080` in your browser.
+
+## Deploy to GitHub Pages
+
+This repository includes workflow:
+
+- `.github/workflows/deploy-pages.yml`
+
+Deployment behavior:
+
+- Auto deploy on push to `main` when `demo_h5/**` changes
+- Manual deploy with GitHub Actions `workflow_dispatch`
+
+After deployment completes, the site URL follows:
+
+```text
+https://<github-username>.github.io/h5_lua_slots/
+```
